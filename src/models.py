@@ -1,9 +1,22 @@
+from abc import ABC, abstractmethod
+
 import joblib
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeClassifier
 
 
-class LinearRegressionModel:
+class Model(ABC):
+    @abstractmethod
+    def train(self, X, y): ...
+
+    @abstractmethod
+    def predict(self, X): ...
+
+    @abstractmethod
+    def save(self) -> dict: ...
+
+
+class LinearRegressionModel(Model):
     def __init__(self):
         self.model = LinearRegression()
 
@@ -17,7 +30,7 @@ class LinearRegressionModel:
         joblib.dump(self.model, file_path)
 
 
-class DecisionTreeModel:
+class DecisionTreeModel(Model):
     def __init__(self):
         self.model = DecisionTreeClassifier()
 

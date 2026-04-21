@@ -9,13 +9,13 @@ class ModelType(str, Enum):
     decision_tree = "decision-tree"
 
 
-class ProblemType(str, Enum):
+class Task(str, Enum):
     regression = "regression"
     classification = "classification"
 
 
 class ModelConfig(BaseModel):
-    problem_type: ProblemType
+    task: Task
     model_type: ModelType
     file_path: Path
     feature_names: list[str]
