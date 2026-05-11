@@ -1,17 +1,8 @@
-from enum import Enum
 from pathlib import Path
 
 from pydantic import BaseModel
 
-
-class ModelType(str, Enum):
-    linear_regression = "linear-regression"
-    decision_tree = "decision-tree"
-
-
-class Task(str, Enum):
-    regression = "regression"
-    classification = "classification"
+from .types import ModelType, Task
 
 
 class ModelConfig(BaseModel):
@@ -24,4 +15,6 @@ class ModelConfig(BaseModel):
 
 class TrainRequest(BaseModel):
     model_type: ModelType
-    file_path: Path
+    dataset_file_path: Path
+    target_name: str
+    feature_names: list[str]
