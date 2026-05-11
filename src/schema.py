@@ -17,4 +17,4 @@ class TrainRequest(BaseModel):
     model_type: ModelType
     dataset_file_path: Path
     target_name: str
-    feature_names: list[str]
+    feature_names: list[str] | None

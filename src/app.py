@@ -9,7 +9,7 @@ from src.models import DecisionTreeModel, LinearRegressionModel
 
 from .schema import ModelType, TrainRequest
 
-app = FastAPI()
+app = FastAPI(debug=True)
 
 
 @app.on_event("startup")
@@ -22,13 +22,13 @@ async def root():
     return {"message": "Server up and running!"}
 
 
-@app.get("/models")
+@app.get("/models", response_model_exclude={"raw_model"})
 async def get_models(session: SessionDep) -> Sequence[MlModel]:
     models = session.exec(select(MlModel)).all()
     return models
 
 
-@app.get("/models/{model_id}")
+@app.get("/models/{model_id}", response_model_exclude={"raw_model"})
 async def get_model(model_id: int, session: SessionDep) -> MlModel:
     model = session.get(MlModel, model_id)
 
@@ -37,7 +37,7 @@ async def get_model(model_id: int, session: SessionDep) -> MlModel:
     return model
 
 
-@app.post("/train/")
+@app.post("/train/", status_code=201, response_model_exclude={"raw_model"})
 async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     target_name = body.target_name
     csv_file_path = body.dataset_file_path
