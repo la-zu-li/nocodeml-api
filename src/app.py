@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from fastapi import FastAPI, HTTPException
 from sqlmodel import select
 
@@ -21,13 +23,13 @@ async def root():
 
 
 @app.get("/models")
-async def get_models(session: SessionDep):
+async def get_models(session: SessionDep) -> Sequence[MlModel]:
     models = session.exec(select(MlModel)).all()
     return models
 
 
 @app.get("/models/{model_id}")
-async def get_model(model_id: int, session: SessionDep):
+async def get_model(model_id: int, session: SessionDep) -> MlModel:
     model = session.get(MlModel, model_id)
 
     if not model:
@@ -36,7 +38,7 @@ async def get_model(model_id: int, session: SessionDep):
 
 
 @app.post("/train/")
-async def train(body: TrainRequest, session: SessionDep):
+async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     target_name = body.target_name
     csv_file_path = body.dataset_file_path
 

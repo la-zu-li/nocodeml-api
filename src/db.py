@@ -1,8 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import Engine
-from sqlmodel import Field, Session, SQLModel, create_engine
+from sqlmodel import JSON, Column, Field, Session, SQLModel, create_engine
 
 from .types import ModelType, Task
 
@@ -12,7 +11,7 @@ class MlModel(SQLModel, table=True):
     task: Task
     model_type: ModelType
     is_trained: bool
-    feature_names: list[str] | None = Field(default=None)
+    feature_names: list[str] | None = Field(default=None, sa_column=Column(JSON))
     target_name: str
     raw_model: bytes
 
@@ -28,7 +27,7 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
-def get_session(engine: Engine):
+def get_session():
     with Session(engine) as session:
         yield session
 
