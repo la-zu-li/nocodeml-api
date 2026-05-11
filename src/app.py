@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from sqlmodel import select
 
-from src.db import SessionDep, create_db_and_tables
+from src.db import MlModel, SessionDep, create_db_and_tables
 from src.loader import CsvDataloader
 from src.models import DecisionTreeModel, LinearRegressionModel
 
@@ -17,6 +18,21 @@ def on_startup():
 @app.get("/")
 async def root():
     return {"message": "Server up and running!"}
+
+
+@app.get("/models")
+async def get_models(session: SessionDep):
+    models = session.exec(select(MlModel)).all()
+    return models
+
+
+@app.get("/models/{model_id}")
+async def get_model(model_id: int, session: SessionDep):
+    model = session.get(MlModel, model_id)
+
+    if not model:
+        raise HTTPException(status_code=404, detail="Model not found")
+    return model
 
 
 @app.post("/train/")
