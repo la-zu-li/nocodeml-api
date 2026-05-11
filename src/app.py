@@ -1,11 +1,17 @@
 from fastapi import FastAPI
 
+from src.db import SessionDep, create_db_and_tables
+from src.loader import CsvDataloader
 from src.models import DecisionTreeModel, LinearRegressionModel
 
 from .schema import ModelType, TrainRequest
 
-from .env import 
 app = FastAPI()
+
+
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
 
 @app.get("/")
@@ -14,12 +20,17 @@ async def root():
 
 
 @app.post("/train/")
-async def train(body: TrainRequest):
+async def train(body: TrainRequest, session: SessionDep):
+    target_name = body.target_name
+    csv_file_path = body.dataset_file_path
+
     if body.model_type is ModelType.linear_regression:
-        model = LinearRegressionModel()
+        model = LinearRegressionModel(target_name)
     else:
-        model = DecisionTreeModel()
+        model = DecisionTreeModel(target_name)
 
-    training_results = model.train(body.file_path)
-    model.dump(f"models/{body.model_type.value}.pkl")
+    dataloader = CsvDataloader(csv_file_path)
+    X, y = dataloader.load_xy(target_name)
+    model.train(X, y)
 
+    return model.save(session)
