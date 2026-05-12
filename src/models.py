@@ -1,5 +1,6 @@
 import pickle as pkl
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from uuid import uuid4
 
 from sklearn.linear_model import LinearRegression
@@ -39,14 +40,6 @@ class Model(ABC):
         session.refresh(db_model)
 
         return db_model
-
-    @classmethod
-    def load_from_db(cls, db_model: MlModel):
-        feature_names = db_model.feature_names
-        target_name = db_model.target_name
-        model = pkl.loads(db_model.raw_model)
-
-        return cls(model, target_name, feature_names)
 
 
 class LinearRegressionModel(Model):
@@ -112,3 +105,18 @@ class DecisionTreeModel(Model):
         filename = f"linear_regression_{self.id}.pkl"
         file_path = folder_path / filename
         return file_path
+
+
+def create_model_from_db(db_model: MlModel):
+    feature_names = db_model.feature_names
+    target_name = db_model.target_name
+    raw_model = pkl.loads(db_model.raw_model)
+    model_type = db_model.model_type
+
+    if model_type is ModelType.linear_regression:
+        model = LinearRegressionModel(target_name, feature_names)
+    else:
+        model = DecisionTreeModel(target_name, feature_names)
+
+    model.model = raw_model
+    return model

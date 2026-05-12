@@ -5,11 +5,13 @@ from sqlmodel import select
 
 from src.db import MlModel, SessionDep, create_db_and_tables
 from src.loader import CsvDataloader
-from src.models import DecisionTreeModel, LinearRegressionModel, Model
+from src.models import DecisionTreeModel, LinearRegressionModel, create_model_from_db
 
 from .schema import ModelType, PredictRequest, TrainRequest
 
 app = FastAPI(debug=True)
+
+import logging
 
 
 @app.on_event("startup")
@@ -64,9 +66,12 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
     if not db_model:
         raise HTTPException(status_code=404, detail="Model not found")
 
-    model = Model.load_from_db(db_model)
+    model = create_model_from_db(db_model)
 
     dataloader = CsvDataloader(csv_file_path)
     X, _ = dataloader.load_xy(model.target_name)
 
-    return model.predict(X)
+    prediction = model.predict(X)
+    logging.info(prediction)
+
+    return prediction
