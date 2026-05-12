@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from uuid import uuid4
 
+import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeClassifier
 
@@ -51,7 +52,9 @@ class LinearRegressionModel(Model):
         self.model.fit(X, y)
 
     def predict(self, X):
-        return self.model.predict(X)
+        prediction = self.model.predict(X)
+        assert isinstance(prediction, np.ndarray)
+        return prediction.tolist()
 
     def create_db_model(self) -> MlModel:
         model_bytes = self.dump()
@@ -84,7 +87,9 @@ class DecisionTreeModel(Model):
         self.model.fit(X, y)
 
     def predict(self, X):
-        return self.model.predict(X)
+        prediction = self.model.predict(X)
+        assert isinstance(prediction, np.ndarray)
+        return prediction.tolist()
 
     def create_db_model(self) -> MlModel:
         model_bytes = self.dump()
