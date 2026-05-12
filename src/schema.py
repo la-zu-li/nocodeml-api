@@ -18,3 +18,8 @@ class TrainRequest(BaseModel):
     dataset_file_path: Path
     target_name: str
     feature_names: list[str] | None
+
+
+class PredictRequest(BaseModel):
+    model_id: int
+    instances_file_path: Path

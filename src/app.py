@@ -5,9 +5,9 @@ from sqlmodel import select
 
 from src.db import MlModel, SessionDep, create_db_and_tables
 from src.loader import CsvDataloader
-from src.models import DecisionTreeModel, LinearRegressionModel
+from src.models import DecisionTreeModel, LinearRegressionModel, Model
 
-from .schema import ModelType, TrainRequest
+from .schema import ModelType, PredictRequest, TrainRequest
 
 app = FastAPI(debug=True)
 
@@ -52,3 +52,21 @@ async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     model.train(X, y)
 
     return model.save(session)
+
+
+@app.post("/predict/")
+async def predict(body: PredictRequest, session: SessionDep):
+    csv_file_path = body.instances_file_path
+    model_id = body.model_id
+
+    db_model = session.get(MlModel, model_id)
+
+    if not db_model:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    model = Model.load_from_db(db_model)
+
+    dataloader = CsvDataloader(csv_file_path)
+    X, _ = dataloader.load_xy(model.target_name)
+
+    return model.predict(X)
