@@ -37,7 +37,7 @@ async def get_model(model_id: int, session: SessionDep) -> MlModel:
     return model
 
 
-@app.post("/train/", status_code=201, response_model_exclude={"raw_model"})
+@app.post("/train", status_code=201, response_model_exclude={"raw_model"})
 async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     target_name = body.target_name
     csv_file_path = body.dataset_file_path
@@ -54,8 +54,8 @@ async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     return model.save(session)
 
 
-@app.post("/predict/")
-async def predict(body: PredictRequest, session: SessionDep):
+@app.post("/predict")
+async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | float]:
     csv_file_path = body.instances_file_path
     model_id = body.model_id
 
