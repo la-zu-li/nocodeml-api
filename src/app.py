@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from sqlmodel import select
@@ -37,6 +38,16 @@ async def get_model(model_id: int, session: SessionDep) -> MlModel:
     if not model:
         raise HTTPException(status_code=404, detail="Model not found")
     return model
+
+
+@app.get("/export/{model_id}", response_model_exclude={"raw_model"})
+async def export_model(model_id: int, session: SessionDep) -> Path:
+    db_model = session.get(MlModel, model_id)
+
+    if not db_model:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    return db_model.export()
 
 
 @app.post("/train", status_code=201, response_model_exclude={"raw_model"})

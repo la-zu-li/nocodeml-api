@@ -9,7 +9,6 @@ from sklearn.tree import DecisionTreeClassifier
 
 from src.db import MlModel, SessionDep
 
-from .env import CONFIG_PATH
 from .types import ModelType, Task
 
 
@@ -68,14 +67,6 @@ class LinearRegressionModel(Model):
             raw_model=model_bytes,
         )
 
-    def get_filepath(self):
-        folder_path = CONFIG_PATH / "models"
-        folder_path.mkdir(exist_ok=True, parents=True)
-
-        filename = f"linear_regression_{self.id}.pkl"
-        file_path = folder_path / filename
-        return file_path
-
 
 class DecisionTreeModel(Model):
 
@@ -103,16 +94,8 @@ class DecisionTreeModel(Model):
             raw_model=model_bytes,
         )
 
-    def get_filepath(self):
-        folder_path = CONFIG_PATH / "models"
-        folder_path.mkdir(exist_ok=True, parents=True)
 
-        filename = f"linear_regression_{self.id}.pkl"
-        file_path = folder_path / filename
-        return file_path
-
-
-def create_model_from_db(db_model: MlModel):
+def create_model_from_db(db_model: MlModel) -> Model:
     feature_names = db_model.feature_names
     target_name = db_model.target_name
     raw_model = pkl.loads(db_model.raw_model)
