@@ -44,7 +44,7 @@ async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     target_name = body.target_name
     csv_file_path = body.dataset_file_path
 
-    if body.model_type is ModelType.linear_regression:
+    if body.model_type is ModelType.LINEAR_REGRESSION:
         model = LinearRegressionModel(target_name)
     else:
         model = DecisionTreeModel(target_name)

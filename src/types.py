@@ -2,10 +2,10 @@ from enum import Enum
 
 
 class ModelType(str, Enum):
-    linear_regression = "linear-regression"
-    decision_tree = "decision-tree"
+    LINEAR_REGRESSION = "linear-regression"
+    DECISION_TREE = "decision-tree"
 
 
 class Task(str, Enum):
-    regression = "regression"
-    classification = "classification"
+    REGRESSION = "regression"
+    CLASSIFICATION = "classification"

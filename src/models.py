@@ -60,8 +60,8 @@ class LinearRegressionModel(Model):
         model_bytes = self.dump()
 
         return MlModel(
-            task=Task.regression,
-            model_type=ModelType.linear_regression,
+            task=Task.REGRESSION,
+            model_type=ModelType.LINEAR_REGRESSION,
             is_trained=True,
             feature_names=self.feature_names,
             target_name=self.target_name,
@@ -95,8 +95,8 @@ class DecisionTreeModel(Model):
         model_bytes = self.dump()
 
         return MlModel(
-            task=Task.classification,
-            model_type=ModelType.decision_tree,
+            task=Task.CLASSIFICATION,
+            model_type=ModelType.DECISION_TREE,
             is_trained=True,
             feature_names=self.feature_names,
             target_name=self.target_name,
@@ -118,7 +118,7 @@ def create_model_from_db(db_model: MlModel):
     raw_model = pkl.loads(db_model.raw_model)
     model_type = db_model.model_type
 
-    if model_type is ModelType.linear_regression:
+    if model_type is ModelType.LINEAR_REGRESSION:
         model = LinearRegressionModel(target_name, feature_names)
     else:
         model = DecisionTreeModel(target_name, feature_names)
