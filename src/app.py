@@ -53,15 +53,16 @@ async def export_model(model_id: int, session: SessionDep) -> Path:
 @app.post("/train", status_code=201, response_model_exclude={"raw_model"})
 async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     target_name = body.target_name
+    feature_names = body.feature_names
     csv_file_path = body.dataset_file_path
 
     if body.model_type is ModelType.LINEAR_REGRESSION:
-        model = LinearRegressionModel(target_name)
+        model = LinearRegressionModel(target_name, feature_names)
     else:
-        model = DecisionTreeModel(target_name)
+        model = DecisionTreeModel(target_name, feature_names)
 
     dataloader = CsvDataloader(csv_file_path)
-    X, y = dataloader.load_xy(target_name)
+    X, y = dataloader.load_xy(target_name, feature_names)
     model.train(X, y)
 
     return model.save(session)
@@ -80,9 +81,9 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
     model = create_model_from_db(db_model)
 
     dataloader = CsvDataloader(csv_file_path)
-    X, _ = dataloader.load_xy(model.target_name)
-
+    X, _ = dataloader.load_xy(model.target_name, model.feature_names)
     prediction = model.predict(X)
+
     logging.info(prediction)
 
     return prediction
