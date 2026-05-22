@@ -1,11 +1,12 @@
 from collections.abc import Sequence
 from pathlib import Path
 
+import pandas as pd
 from fastapi import FastAPI, HTTPException
 from sqlmodel import select
 
 from src.db import MlModel, SessionDep, create_db_and_tables
-from src.loader import CsvDataloader
+from src.loader import CsvDataloader, UnexistentFeatureError, UnexistentTargetError
 from src.models import DecisionTreeModel, LinearRegressionModel, create_model_from_db
 
 from .schema import ModelType, PredictRequest, TrainRequest
@@ -61,8 +62,23 @@ async def train(body: TrainRequest, session: SessionDep) -> MlModel:
     else:
         model = DecisionTreeModel(target_name, feature_names)
 
-    dataloader = CsvDataloader(csv_file_path)
-    X, y = dataloader.load_xy(target_name, feature_names)
+    try:
+        dataloader = CsvDataloader(csv_file_path)
+        X, y = dataloader.load_xy(target_name, feature_names)
+    except (FileNotFoundError, pd.errors.EmptyDataError):
+        raise HTTPException(
+            status_code=400, detail=f"CSV data is not available or empty"
+        )
+    except pd.errors.ParserError:
+        raise HTTPException(
+            status_code=400, detail=f"File does not contain valid CSV data"
+        )
+    except (UnexistentTargetError, UnexistentFeatureError) as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
+
     model.train(X, y)
 
     return model.save(session)
@@ -80,8 +96,23 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
 
     model = create_model_from_db(db_model)
 
-    dataloader = CsvDataloader(csv_file_path)
-    X, _ = dataloader.load_xy(model.target_name, model.feature_names)
+    try:
+        dataloader = CsvDataloader(csv_file_path)
+        X, _ = dataloader.load_xy(model.target_name, model.feature_names)
+    except (FileNotFoundError, pd.errors.EmptyDataError):
+        raise HTTPException(
+            status_code=400, detail=f"CSV data is not available or empty"
+        )
+    except pd.errors.ParserError:
+        raise HTTPException(
+            status_code=400, detail=f"File does not contain valid CSV data"
+        )
+    except (UnexistentTargetError, UnexistentFeatureError) as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
+
     prediction = model.predict(X)
 
     logging.info(prediction)
