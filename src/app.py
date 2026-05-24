@@ -118,3 +118,16 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
     logging.info(prediction)
 
     return prediction
+
+
+@app.delete("/models/{model_id}")
+async def delete_model(model_id: int, session: SessionDep) -> MlModelBase:
+    db_model = session.get(MlModel, model_id)
+
+    if not db_model:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    session.delete(db_model)
+    session.commit()
+
+    return db_model
