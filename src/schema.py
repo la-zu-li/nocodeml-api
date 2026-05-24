@@ -23,3 +23,14 @@ class TrainRequest(BaseModel):
 class PredictRequest(BaseModel):
     model_id: int
     instances_file_path: Path
+
+
+class EvaluationRequest(BaseModel):
+    model_id: int
+    dataset_file_path: Path
+
+
+class EvaluationResults(BaseModel):
+    prediction: list[int | float]
+    ground_truth: list[int | float]
+    score: float

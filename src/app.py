@@ -6,10 +6,16 @@ from fastapi import FastAPI, HTTPException
 from sqlmodel import select
 
 from src.db import MlModel, MlModelBase, SessionDep, create_db_and_tables
-from src.loader import CsvDataloader, UnexistentFeatureError, UnexistentTargetError
+from src.loader import CsvDataloader, handle_csv_loading
 from src.models import DecisionTreeModel, LinearRegressionModel, create_model_from_db
 
-from .schema import ModelType, PredictRequest, TrainRequest
+from .schema import (
+    EvaluationRequest,
+    EvaluationResults,
+    ModelType,
+    PredictRequest,
+    TrainRequest,
+)
 
 app = FastAPI(debug=True)
 
@@ -92,6 +98,29 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
     logging.info(prediction)
 
     return prediction
+
+
+@app.post("/evaluate")
+async def evaluate_model(
+    body: EvaluationRequest, session: SessionDep
+) -> EvaluationResults:
+    db_model = session.get(MlModel, body.model_id)
+
+    if not db_model:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    model = create_model_from_db(db_model)
+
+    with handle_csv_loading():
+        dataloader = CsvDataloader(body.dataset_file_path)
+        X, y = dataloader.load_xy(model.target_name, model.feature_names)
+
+    prediction = model.predict(X)
+    score = model.evaluate(X, y)
+
+    return EvaluationResults(
+        prediction=prediction, ground_truth=y.tolist(), score=score
+    )
 
 
 @app.delete("/models/{model_id}")

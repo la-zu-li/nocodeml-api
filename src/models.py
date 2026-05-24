@@ -23,7 +23,7 @@ class Model(ABC):
     def train(self, X, y): ...
 
     @abstractmethod
-    def predict(self, X) -> Sequence[int | float]: ...
+    def predict(self, X) -> list[int | float]: ...
 
     def dump(self):
         model_bytes = pkl.dumps(self.model, pkl.HIGHEST_PROTOCOL)
@@ -40,6 +40,9 @@ class Model(ABC):
         session.refresh(db_model)
 
         return db_model
+
+    def evaluate(self, X, y) -> float:
+        return self.model.score(X, y)
 
 
 class LinearRegressionModel(Model):

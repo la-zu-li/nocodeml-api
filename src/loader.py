@@ -10,13 +10,11 @@ class CsvDataloader:
         self.file_path = file_path
         self.dataframe = pd.read_csv(file_path)
 
-    def load_xy(self, target_column, feature_columns: list[str] | None = None):
+    def load_x(self, target_column, feature_columns: list[str] | None = None):
         try:
             X = self.dataframe.drop(columns=[target_column])
         except KeyError:
-            raise UnexistentTargetError(
-                f"Target column '{target_column}' does not exist in the CSV data"
-            )
+            X = self.dataframe
         if feature_columns:
             try:
                 X = X[feature_columns]
@@ -24,7 +22,16 @@ class CsvDataloader:
                 raise UnexistentFeatureError(
                     f"The combination of feature columns {feature_columns} does not exist in the CSV data"
                 )
-        y = self.dataframe[target_column]
+        return X
+
+    def load_xy(self, target_column, feature_columns: list[str] | None = None):
+        X = self.load_x(target_column, feature_columns)
+        try:
+            y = self.dataframe[target_column]
+        except KeyError:
+            raise UnexistentTargetError(
+                f"Target column '{target_column}' does not exist in the CSV data"
+            )
         return X, y
 
 
