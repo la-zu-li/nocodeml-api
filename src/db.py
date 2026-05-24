@@ -8,13 +8,16 @@ from .env import CONFIG_PATH
 from .types import ModelType, Task
 
 
-class MlModel(SQLModel, table=True):
+class MlModelBase(SQLModel):
     id: int = Field(default=None, primary_key=True)
     task: Task
     model_type: ModelType
     is_trained: bool
     feature_names: list[str] | None = Field(default=None, sa_column=Column(JSON))
     target_name: str
+
+
+class MlModel(MlModelBase, table=True):
     raw_model: bytes
 
     def export(self):

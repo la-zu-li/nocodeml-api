@@ -5,7 +5,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from sqlmodel import select
 
-from src.db import MlModel, SessionDep, create_db_and_tables
+from src.db import MlModel, MlModelBase, SessionDep, create_db_and_tables
 from src.loader import CsvDataloader, UnexistentFeatureError, UnexistentTargetError
 from src.models import DecisionTreeModel, LinearRegressionModel, create_model_from_db
 
@@ -26,14 +26,14 @@ async def root():
     return {"message": "Server up and running!"}
 
 
-@app.get("/models", response_model_exclude={"raw_model"})
-async def get_models(session: SessionDep) -> Sequence[MlModel]:
+@app.get("/models")
+async def get_models(session: SessionDep) -> Sequence[MlModelBase]:
     models = session.exec(select(MlModel)).all()
     return models
 
 
-@app.get("/models/{model_id}", response_model_exclude={"raw_model"})
-async def get_model(model_id: int, session: SessionDep) -> MlModel:
+@app.get("/models/{model_id}")
+async def get_model(model_id: int, session: SessionDep) -> MlModelBase:
     model = session.get(MlModel, model_id)
 
     if not model:
@@ -41,7 +41,7 @@ async def get_model(model_id: int, session: SessionDep) -> MlModel:
     return model
 
 
-@app.get("/export/{model_id}", response_model_exclude={"raw_model"})
+@app.get("/export/{model_id}")
 async def export_model(model_id: int, session: SessionDep) -> Path:
     db_model = session.get(MlModel, model_id)
 
@@ -51,8 +51,8 @@ async def export_model(model_id: int, session: SessionDep) -> Path:
     return db_model.export()
 
 
-@app.post("/train", status_code=201, response_model_exclude={"raw_model"})
-async def train(body: TrainRequest, session: SessionDep) -> MlModel:
+@app.post("/train", status_code=201)
+async def train(body: TrainRequest, session: SessionDep) -> MlModelBase:
     target_name = body.target_name
     feature_names = body.feature_names
     csv_file_path = body.dataset_file_path
