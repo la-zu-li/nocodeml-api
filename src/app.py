@@ -62,22 +62,9 @@ async def train(body: TrainRequest, session: SessionDep) -> MlModelBase:
     else:
         model = DecisionTreeModel(target_name, feature_names)
 
-    try:
+    with handle_csv_loading():
         dataloader = CsvDataloader(csv_file_path)
         X, y = dataloader.load_xy(target_name, feature_names)
-    except (FileNotFoundError, pd.errors.EmptyDataError):
-        raise HTTPException(
-            status_code=400, detail=f"CSV data is not available or empty"
-        )
-    except pd.errors.ParserError:
-        raise HTTPException(
-            status_code=400, detail=f"File does not contain valid CSV data"
-        )
-    except (UnexistentTargetError, UnexistentFeatureError) as e:
-        raise HTTPException(
-            status_code=400,
-            detail=str(e),
-        )
 
     model.train(X, y)
 
@@ -96,22 +83,9 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
 
     model = create_model_from_db(db_model)
 
-    try:
+    with handle_csv_loading():
         dataloader = CsvDataloader(csv_file_path)
-        X, _ = dataloader.load_xy(model.target_name, model.feature_names)
-    except (FileNotFoundError, pd.errors.EmptyDataError):
-        raise HTTPException(
-            status_code=400, detail=f"CSV data is not available or empty"
-        )
-    except pd.errors.ParserError:
-        raise HTTPException(
-            status_code=400, detail=f"File does not contain valid CSV data"
-        )
-    except (UnexistentTargetError, UnexistentFeatureError) as e:
-        raise HTTPException(
-            status_code=400,
-            detail=str(e),
-        )
+        X = dataloader.load_x(model.target_name, model.feature_names)
 
     prediction = model.predict(X)
 

@@ -1,6 +1,8 @@
+from contextlib import contextmanager
 from pathlib import Path
 
 import pandas as pd
+from fastapi import HTTPException
 
 
 class CsvDataloader:
@@ -32,3 +34,22 @@ class UnexistentTargetError(KeyError):
 
 class UnexistentFeatureError(KeyError):
     pass
+
+
+@contextmanager
+def handle_csv_loading():
+    try:
+        yield
+    except (FileNotFoundError, pd.errors.EmptyDataError):
+        raise HTTPException(
+            status_code=400, detail=f"CSV data is not available or empty"
+        )
+    except pd.errors.ParserError:
+        raise HTTPException(
+            status_code=400, detail=f"File does not contain valid CSV data"
+        )
+    except (UnexistentTargetError, UnexistentFeatureError) as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
