@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from pathlib import Path
 
-import pandas as pd
 from fastapi import FastAPI, HTTPException
 from sqlmodel import select
 
@@ -30,6 +29,11 @@ def on_startup():
 @app.get("/")
 async def root():
     return {"message": "Server up and running!"}
+
+
+@app.get("/model_types")
+async def get_model_types() -> Sequence[ModelType]:
+    return list(ModelType)
 
 
 @app.get("/models")
