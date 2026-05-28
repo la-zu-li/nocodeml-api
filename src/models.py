@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeClassifier
 
-from src.db import MlModel, SessionDep
+from src.db import StoredModel, SessionDep
 
 from .types import ModelType, Task
 
@@ -33,7 +33,7 @@ class Model(ABC):
         return model_bytes
 
     @abstractmethod
-    def create_db_model(self) -> MlModel: ...
+    def create_db_model(self) -> StoredModel: ...
 
     def save(self, session: SessionDep):
         db_model = self.create_db_model()
@@ -60,10 +60,10 @@ class LinearRegressionModel(Model):
         assert isinstance(prediction, np.ndarray)
         return prediction.tolist()
 
-    def create_db_model(self) -> MlModel:
+    def create_db_model(self) -> StoredModel:
         model_bytes = self.dump()
 
-        return MlModel(
+        return StoredModel(
             task=Task.REGRESSION,
             model_type=ModelType.LINEAR_REGRESSION,
             feature_names=self.feature_names,
@@ -88,10 +88,10 @@ class DecisionTreeModel(Model):
         assert isinstance(prediction, np.ndarray)
         return prediction.tolist()
 
-    def create_db_model(self) -> MlModel:
+    def create_db_model(self) -> StoredModel:
         model_bytes = self.dump()
 
-        return MlModel(
+        return StoredModel(
             task=Task.CLASSIFICATION,
             model_type=ModelType.DECISION_TREE,
             feature_names=self.feature_names,
@@ -103,7 +103,7 @@ class DecisionTreeModel(Model):
         )
 
 
-def create_model_from_db(db_model: MlModel) -> Model:
+def create_model_from_db(db_model: StoredModel) -> Model:
     feature_names = db_model.feature_names
     target_name = db_model.target_name
     raw_model = pkl.loads(db_model.raw_model)

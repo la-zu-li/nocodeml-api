@@ -8,7 +8,7 @@ from .env import CONFIG_PATH
 from .types import ModelType, Task
 
 
-class MlModelBase(SQLModel):
+class StoredModelBase(SQLModel):
     id: int = Field(default=None, primary_key=True)
     task: Task
     model_type: ModelType
@@ -19,7 +19,7 @@ class MlModelBase(SQLModel):
     validation_score: float
 
 
-class MlModel(MlModelBase, table=True):
+class StoredModel(StoredModelBase, table=True):
     raw_model: bytes
 
     def export(self):

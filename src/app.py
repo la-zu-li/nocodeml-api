@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from sqlmodel import select
 
-from src.db import MlModel, MlModelBase, SessionDep, create_db_and_tables
+from src.db import StoredModel, StoredModelBase, SessionDep, create_db_and_tables
 from src.loader import CsvDataloader, handle_csv_loading
 from src.models import DecisionTreeModel, LinearRegressionModel, create_model_from_db
 
@@ -31,14 +31,14 @@ async def get_model_types() -> Sequence[ModelType]:
 
 
 @app.get("/models")
-async def get_models(session: SessionDep) -> Sequence[MlModelBase]:
-    models = session.exec(select(MlModel)).all()
+async def get_models(session: SessionDep) -> Sequence[StoredModelBase]:
+    models = session.exec(select(StoredModel)).all()
     return models
 
 
 @app.get("/models/{model_id}")
-async def get_model(model_id: int, session: SessionDep) -> MlModelBase:
-    model = session.get(MlModel, model_id)
+async def get_model(model_id: int, session: SessionDep) -> StoredModelBase:
+    model = session.get(StoredModel, model_id)
 
     if not model:
         raise HTTPException(status_code=404, detail="Model not found")
@@ -47,7 +47,7 @@ async def get_model(model_id: int, session: SessionDep) -> MlModelBase:
 
 @app.get("/export/{model_id}")
 async def export_model(model_id: int, session: SessionDep) -> Path:
-    db_model = session.get(MlModel, model_id)
+    db_model = session.get(StoredModel, model_id)
 
     if not db_model:
         raise HTTPException(status_code=404, detail="Model not found")
@@ -56,7 +56,7 @@ async def export_model(model_id: int, session: SessionDep) -> Path:
 
 
 @app.post("/train", status_code=201)
-async def train(body: TrainRequest, session: SessionDep) -> MlModelBase:
+async def train(body: TrainRequest, session: SessionDep) -> StoredModelBase:
     target_name = body.target_name
     feature_names = body.feature_names
     csv_file_path = body.dataset_file_path
@@ -90,7 +90,7 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
     csv_file_path = body.instances_file_path
     model_id = body.model_id
 
-    db_model = session.get(MlModel, model_id)
+    db_model = session.get(StoredModel, model_id)
 
     if not db_model:
         raise HTTPException(status_code=404, detail="Model not found")
@@ -109,8 +109,8 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
 
 
 @app.delete("/models/{model_id}")
-async def delete_model(model_id: int, session: SessionDep) -> MlModelBase:
-    db_model = session.get(MlModel, model_id)
+async def delete_model(model_id: int, session: SessionDep) -> StoredModelBase:
+    db_model = session.get(StoredModel, model_id)
 
     if not db_model:
         raise HTTPException(status_code=404, detail="Model not found")
