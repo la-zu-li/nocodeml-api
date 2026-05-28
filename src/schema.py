@@ -18,6 +18,7 @@ class TrainRequest(BaseModel):
     dataset_file_path: Path
     target_name: str
     feature_names: list[str] | None
+    test_size: float = 0.2
 
 
 class PredictRequest(BaseModel):

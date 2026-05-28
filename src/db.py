@@ -14,6 +14,9 @@ class MlModelBase(SQLModel):
     model_type: ModelType
     feature_names: list[str] | None = Field(default=None, sa_column=Column(JSON))
     target_name: str
+    validation_predictions: list[int | float] = Field(sa_column=Column(JSON))
+    validation_ground_truth: list[int | float] = Field(sa_column=Column(JSON))
+    validation_score: float
 
 
 class MlModel(MlModelBase, table=True):

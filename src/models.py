@@ -18,6 +18,9 @@ class Model(ABC):
         self.model = model
         self.target_name = target_name
         self.feature_names = feature_names
+        self.validation_predictions: list[int | float] = []
+        self.validation_ground_truth: list[int | float] = []
+        self.validation_score: float = 0.0
 
     @abstractmethod
     def train(self, X, y): ...
@@ -66,6 +69,9 @@ class LinearRegressionModel(Model):
             feature_names=self.feature_names,
             target_name=self.target_name,
             raw_model=model_bytes,
+            validation_predictions=self.validation_predictions,
+            validation_ground_truth=self.validation_ground_truth,
+            validation_score=self.validation_score,
         )
 
 
@@ -91,6 +97,9 @@ class DecisionTreeModel(Model):
             feature_names=self.feature_names,
             target_name=self.target_name,
             raw_model=model_bytes,
+            validation_predictions=self.validation_predictions,
+            validation_ground_truth=self.validation_ground_truth,
+            validation_score=self.validation_score,
         )
 
 

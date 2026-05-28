@@ -8,13 +8,7 @@ from src.db import MlModel, MlModelBase, SessionDep, create_db_and_tables
 from src.loader import CsvDataloader, handle_csv_loading
 from src.models import DecisionTreeModel, LinearRegressionModel, create_model_from_db
 
-from .schema import (
-    EvaluationRequest,
-    EvaluationResults,
-    ModelType,
-    PredictRequest,
-    TrainRequest,
-)
+from .schema import ModelType, PredictRequest, TrainRequest
 
 app = FastAPI(debug=True)
 
@@ -66,6 +60,7 @@ async def train(body: TrainRequest, session: SessionDep) -> MlModelBase:
     target_name = body.target_name
     feature_names = body.feature_names
     csv_file_path = body.dataset_file_path
+    test_size = body.test_size
 
     if body.model_type is ModelType.LINEAR_REGRESSION:
         model = LinearRegressionModel(target_name, feature_names)
@@ -74,9 +69,18 @@ async def train(body: TrainRequest, session: SessionDep) -> MlModelBase:
 
     with handle_csv_loading():
         dataloader = CsvDataloader(csv_file_path)
-        X, y = dataloader.load_xy(target_name, feature_names)
+        X_train, X_test, y_train, y_test = dataloader.train_test_split(
+            target_name, feature_names, test_size=test_size
+        )
 
-    model.train(X, y)
+    model.train(X_train, y_train)
+
+    test_predictions = model.predict(X_test)
+    test_score = model.evaluate(X_test, y_test)
+
+    model.validation_predictions = test_predictions
+    model.validation_ground_truth = y_test.tolist()
+    model.validation_score = test_score
 
     return model.save(session)
 
@@ -102,29 +106,6 @@ async def predict(body: PredictRequest, session: SessionDep) -> Sequence[int | f
     logging.info(prediction)
 
     return prediction
-
-
-@app.post("/evaluate")
-async def evaluate_model(
-    body: EvaluationRequest, session: SessionDep
-) -> EvaluationResults:
-    db_model = session.get(MlModel, body.model_id)
-
-    if not db_model:
-        raise HTTPException(status_code=404, detail="Model not found")
-
-    model = create_model_from_db(db_model)
-
-    with handle_csv_loading():
-        dataloader = CsvDataloader(body.dataset_file_path)
-        X, y = dataloader.load_xy(model.target_name, model.feature_names)
-
-    prediction = model.predict(X)
-    score = model.evaluate(X, y)
-
-    return EvaluationResults(
-        prediction=prediction, ground_truth=y.tolist(), score=score
-    )
 
 
 @app.delete("/models/{model_id}")

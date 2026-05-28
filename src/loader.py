@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from fastapi import HTTPException
+from sklearn.model_selection import train_test_split
 
 
 class CsvDataloader:
@@ -33,6 +34,16 @@ class CsvDataloader:
                 f"Target column '{target_column}' does not exist in the CSV data"
             )
         return X, y
+
+    def train_test_split(
+        self,
+        target_column,
+        feature_columns: list[str] | None = None,
+        test_size=0.2,
+    ):
+        X, y = self.load_xy(target_column, feature_columns)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
+        return X_train, X_test, y_train, y_test
 
 
 class UnexistentTargetError(KeyError):
