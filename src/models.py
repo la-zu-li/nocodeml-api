@@ -47,7 +47,6 @@ class Model(ABC):
 
 class LinearRegressionModel(Model):
     def __init__(self, target_name: str, feature_names: list[str] | None = None):
-        self.id = uuid4()
         super().__init__(LinearRegression(), target_name, feature_names)
 
     def train(self, X, y):
@@ -64,7 +63,6 @@ class LinearRegressionModel(Model):
         return MlModel(
             task=Task.REGRESSION,
             model_type=ModelType.LINEAR_REGRESSION,
-            is_trained=True,
             feature_names=self.feature_names,
             target_name=self.target_name,
             raw_model=model_bytes,
@@ -74,7 +72,6 @@ class LinearRegressionModel(Model):
 class DecisionTreeModel(Model):
 
     def __init__(self, target_name: str, feature_names: list[str] | None = None):
-        self.id = uuid4()
         super().__init__(DecisionTreeClassifier(), target_name, feature_names)
 
     def train(self, X, y):
@@ -91,7 +88,6 @@ class DecisionTreeModel(Model):
         return MlModel(
             task=Task.CLASSIFICATION,
             model_type=ModelType.DECISION_TREE,
-            is_trained=True,
             feature_names=self.feature_names,
             target_name=self.target_name,
             raw_model=model_bytes,
